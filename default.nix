@@ -16,13 +16,13 @@ let
 in
 pkgs.stdenv.mkDerivation {
   pname = "xdna-driver-xrt";
-  version = "66233797fea7ce304bc482d5921021fdd2b52291";
+  version = "e1ed1ad67a5d97a56722bca0ea915fd0c34627c7";
 
   src = pkgs.fetchgit {
     url = "https://github.com/amd/xdna-driver.git";
-    rev = "66233797fea7ce304bc482d5921021fdd2b52291";
+    rev = "e1ed1ad67a5d97a56722bca0ea915fd0c34627c7";
     fetchSubmodules = true;
-    hash = "sha256-iR8QkX20ImbDNyf7MmMpkls57NJFTCaVZA0NAfNdTlI=";
+    hash = "sha256-Li69EsLe7iCXPBQ2o72mIEDzN0MSl2PNXWDqlobV6+c=";
   };
 
   nativeBuildInputs = with pkgs; [
@@ -128,7 +128,7 @@ pkgs.stdenv.mkDerivation {
     for lib in $out/lib/*.so*; do
       if [ -f "$lib" ] && [ ! -L "$lib" ]; then
         echo "Fixing hardcoded paths in $lib"
-        sed -i "s|/build/xdna-driver-6623379/xrt/build/install|$out|g" "$lib" || true
+        sed -i "s|/build/xdna-driver-e1ed1ad/xrt/build/install|$out|g" "$lib" || true
       fi
     done
   '';
