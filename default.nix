@@ -2,27 +2,27 @@
 
 let
   vtdStrx = pkgs.fetchurl {
-    url = "https://github.com/Xilinx/VTD/raw/5f5ad4f7b929428d28fe6808895a09125af011ac/archive/strx/xrt_smi_strx.a";
-    sha256 = "0b7k7v675japfchg78ih3jbcs9i8ajvxj3jl015n1z7kbh6lyf2p";
+    url = "https://github.com/Xilinx/VTD/raw/0b65e6c61ca5505bac0b0b7d6c500806e53b0ad1/archive/strx/xrt_smi_strx.a";
+    sha256 = "1ahd7s3zanvxz72w8wzr1zfh4im15dcw4mfwmm6dgw4d95q1nbd3";
   };
   vtdPhx = pkgs.fetchurl {
-    url = "https://github.com/Xilinx/VTD/raw/5f5ad4f7b929428d28fe6808895a09125af011ac/archive/phx/xrt_smi_phx.a";
+    url = "https://github.com/Xilinx/VTD/raw/0b65e6c61ca5505bac0b0b7d6c500806e53b0ad1/archive/phx/xrt_smi_phx.a";
     sha256 = "0265jpqqy4f9sb6q2wd1nn3ldfbiab2jlk3hphyz7p77iq1z4w09";
   };
   vtdNpu3 = pkgs.fetchurl {
-    url = "https://github.com/Xilinx/VTD/raw/5f5ad4f7b929428d28fe6808895a09125af011ac/archive/npu3/xrt_smi_npu3.a";
+    url = "https://github.com/Xilinx/VTD/raw/0b65e6c61ca5505bac0b0b7d6c500806e53b0ad1/archive/npu3/xrt_smi_npu3.a";
     sha256 = "13h0rvg4avfssn5dq0na277mbc0kv37g34cnxkdjiwa3va3j312j";
   };
 in
 pkgs.stdenv.mkDerivation {
   pname = "xdna-driver-xrt";
-  version = "e1ed1ad67a5d97a56722bca0ea915fd0c34627c7";
+  version = "ffe59680bedff4280a63af95af4333df826ecf96";
 
   src = pkgs.fetchgit {
     url = "https://github.com/amd/xdna-driver.git";
-    rev = "e1ed1ad67a5d97a56722bca0ea915fd0c34627c7";
+    rev = "ffe59680bedff4280a63af95af4333df826ecf96";
     fetchSubmodules = true;
-    hash = "sha256-Li69EsLe7iCXPBQ2o72mIEDzN0MSl2PNXWDqlobV6+c=";
+    hash = "sha256-BIW2OQ55Ejctm9C1043q7fUdnmK1HvVIzPF1p8y2KfU=";
   };
 
   nativeBuildInputs = with pkgs; [
@@ -128,7 +128,7 @@ pkgs.stdenv.mkDerivation {
     for lib in $out/lib/*.so*; do
       if [ -f "$lib" ] && [ ! -L "$lib" ]; then
         echo "Fixing hardcoded paths in $lib"
-        sed -i "s|/build/xdna-driver-e1ed1ad/xrt/build/install|$out|g" "$lib" || true
+        sed -i "s|/build/xdna-driver-ffe5968/xrt/build/install|$out|g" "$lib" || true
       fi
     done
   '';
