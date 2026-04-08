@@ -131,5 +131,22 @@ pkgs.stdenv.mkDerivation {
         sed -i "s|/build/xdna-driver-ffe5968/xrt/build/install|$out|g" "$lib" || true
       fi
     done
+
+    # The loader binary (bin/unwrapped/loader) looks for setup.sh at
+    # dirname(argv[0])/../../setup.sh. Create a minimal one at $out/setup.sh.
+    cat > $out/setup.sh << EOF
+#!/bin/sh
+export XILINX_XRT="$out"
+export PATH="$out/bin:\$PATH"
+export LD_LIBRARY_PATH="$out/lib:\$LD_LIBRARY_PATH"
+EOF
+    chmod +x $out/setup.sh
+
+    # When xrt-smi is invoked via a symlink in /run/current-system/sw/bin,
+    # loader receives the symlink path as argv[0] and computes the wrong
+    # setup.sh location. Resolve the real path first so loader finds $out/setup.sh.
+    substituteInPlace $out/bin/xrt-smi \
+      --replace-fail '"''${XRT_LOADER}" -exec' \
+                     '"$(readlink -f "''${XRT_LOADER}")" -exec'
   '';
 }
