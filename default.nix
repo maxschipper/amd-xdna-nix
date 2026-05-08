@@ -45,12 +45,13 @@ pkgs.stdenv.mkDerivation {
     grep -rl '/etc/os-release' . | xargs -r sed -i "s|/etc/os-release|$PWD/os-release|g" || true
 
     # Disable dynamic dependencies check which fails if not statically compiled
-    substituteInPlace xrt/src/runtime_src/core/common/aiebu/src/cpp/utils/asm/CMakeLists.txt \
-      --replace-fail "if (NOT AIEBU_UPSTREAM)" "if (FALSE)"
-    substituteInPlace xrt/src/runtime_src/core/common/aiebu/src/cpp/utils/dump/CMakeLists.txt \
-      --replace-fail "if (NOT AIEBU_UPSTREAM)" "if (FALSE)"
-    substituteInPlace xrt/src/runtime_src/core/common/aiebu/src/cpp/utils/transform/CMakeLists.txt \
-      --replace-fail "if (NOT AIEBU_UPSTREAM)" "if (FALSE)"
+    for f in \
+      xrt/src/runtime_src/core/common/aiebu/src/cpp/utils/asm/CMakeLists.txt \
+      xrt/src/runtime_src/core/common/aiebu/src/cpp/utils/dump/CMakeLists.txt \
+      xrt/src/runtime_src/core/common/aiebu/src/cpp/utils/transform/CMakeLists.txt; do
+      [ -f "$f" ] && substituteInPlace "$f" \
+        --replace-fail "if (NOT AIEBU_UPSTREAM)" "if (FALSE)" || true
+    done
 
     # Patch CMake pkg.cmake to treat nixos as arch to output TGZ
     substituteInPlace CMake/pkg.cmake \
