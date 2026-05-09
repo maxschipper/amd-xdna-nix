@@ -16,13 +16,13 @@ let
 in
 pkgs.stdenv.mkDerivation {
   pname = "xdna-driver-xrt";
-  version = "ffe59680bedff4280a63af95af4333df826ecf96";
+  version = "beb9e450fe123ecdf395453971576179cedcf1dd";
 
   src = pkgs.fetchgit {
     url = "https://github.com/amd/xdna-driver.git";
-    rev = "ffe59680bedff4280a63af95af4333df826ecf96";
+    rev = "beb9e450fe123ecdf395453971576179cedcf1dd";
     fetchSubmodules = true;
-    hash = "sha256-BIW2OQ55Ejctm9C1043q7fUdnmK1HvVIzPF1p8y2KfU=";
+    hash = "sha256-bBiI42bwap6O59MQdIylX7uz+fLUF75RTyNWTJfAFds=";
   };
 
   nativeBuildInputs = with pkgs; [
@@ -53,10 +53,20 @@ pkgs.stdenv.mkDerivation {
         --replace-fail "if (NOT AIEBU_UPSTREAM)" "if (FALSE)" || true
     done
 
-    # Patch CMake pkg.cmake to treat nixos as arch to output TGZ
+    # Patch CMake pkg.cmake to add a nixos → TGZ branch.
+    # The arch elseif (which we previously piggybacked on) was removed in tag 2.21.75;
+    # the file now only has debian/fedora branches, so inject a nixos branch before the else.
     substituteInPlace CMake/pkg.cmake \
-      --replace-fail 'elseif("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "arch")' \
-                     'elseif("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "arch" OR "''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "nixos")'
+      --replace-fail \
+        'else("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "debian")
+  message(WARNING "Unknown Linux package flavor: ''${XDNA_CPACK_LINUX_PKG_FLAVOR}")
+endif("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "debian")' \
+        'elseif("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "nixos")
+  set(CPACK_GENERATOR "TGZ")
+  set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+else("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "debian")
+  message(WARNING "Unknown Linux package flavor: ''${XDNA_CPACK_LINUX_PKG_FLAVOR}")
+endif("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "debian")'
 
     # Stop build.sh from downloading VTD archives since we provide them manually in configurePhase
     substituteInPlace build/build.sh \
@@ -98,9 +108,9 @@ pkgs.stdenv.mkDerivation {
     mkdir -p $out
     
     mkdir -p tmp_extract
-    tar -xzf xrt/build/Release/xrt_202610.2.23.0_25.11--base.tar.gz -C tmp_extract
-    tar -xzf xrt/build/Release/xrt_202610.2.23.0_25.11--npu.tar.gz -C tmp_extract
-    tar -xzf build/Release/xrt_plugin.2.23.0_25.11-x86_64-amdxdna.tar.gz -C tmp_extract
+    tar -xzf xrt/build/Release/xrt_202610.2.21.0_25.11--base.tar.gz -C tmp_extract
+    tar -xzf xrt/build/Release/xrt_202610.2.21.0_25.11--npu.tar.gz -C tmp_extract
+    tar -xzf build/Release/xrt_plugin.2.21.0_25.11-x86_64-amdxdna.tar.gz -C tmp_extract
 
     # Move the deeply nested install directory contents to the root of $out
     for dir in $(find tmp_extract -type d -name "install"); do
@@ -129,7 +139,7 @@ pkgs.stdenv.mkDerivation {
     for lib in $out/lib/*.so*; do
       if [ -f "$lib" ] && [ ! -L "$lib" ]; then
         echo "Fixing hardcoded paths in $lib"
-        sed -i "s|/build/xdna-driver-ffe5968/xrt/build/install|$out|g" "$lib" || true
+        sed -i "s|/build/[^/]*/xrt/build/install|$out|g" "$lib" || true
       fi
     done
 
