@@ -17,7 +17,7 @@ A standalone Nix flake that packages the AMD XDNA™ Driver user-space component
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
 
     amd-xdna = {
-      url = "git+https://codeberg.org/tmichnicki/amd-xdna-nix";
+      url = "github:michnicki/amd-xdna-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
