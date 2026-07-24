@@ -15,6 +15,9 @@
           pkgs = nixpkgs.legacyPackages.${system};
         in {
           xdna-driver = pkgs.callPackage ./default.nix { };
+          xdna-driver-kmod = pkgs.linuxPackages.callPackage ./kmod.nix {
+            src = self.packages.${system}.xdna-driver.src;
+          };
           default = self.packages.${system}.xdna-driver;
         }
       );
