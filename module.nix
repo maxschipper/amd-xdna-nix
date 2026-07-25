@@ -12,7 +12,12 @@
     ];
 
     boot.kernelModules = [ "amdxdna" ];
-    
+
+    # The driver requests firmware by exact filename per device/revision
+    # (e.g. amdnpu/17f0_10/npu.dev.sbin); without this the module loads but
+    # fails to probe any NPU.
+    hardware.firmware = [ self.packages.${pkgs.system}.xdna-firmware ];
+
     # Expose XRT to applications
     # We point directly to the package in the store because XRT expects a lib64
     # directory/symlink which NixOS's buildEnv (/run/current-system/sw) doesn't

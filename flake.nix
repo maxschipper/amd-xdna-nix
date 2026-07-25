@@ -18,6 +18,7 @@
           xdna-driver-kmod = pkgs.linuxPackages.callPackage ./kmod.nix {
             src = self.packages.${system}.xdna-driver.src;
           };
+          xdna-firmware = pkgs.callPackage ./firmware.nix { };
           default = self.packages.${system}.xdna-driver;
         }
       );
