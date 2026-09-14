@@ -1,4 +1,6 @@
-{ pkgs ? import <nixpkgs> {} }:
+{
+  pkgs ? import <nixpkgs> { },
+}:
 
 let
   # The amdxdna driver hardcodes its firmware filename as "npu.dev.sbin" per

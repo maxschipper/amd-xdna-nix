@@ -1,4 +1,6 @@
-{ pkgs ? import <nixpkgs> {} }:
+{
+  pkgs ? import <nixpkgs> { },
+}:
 
 let
   vtdStrx = pkgs.fetchurl {
@@ -26,57 +28,91 @@ pkgs.stdenv.mkDerivation {
   };
 
   nativeBuildInputs = with pkgs; [
-    cmake pkg-config git perl unzip wget gcc autoPatchelfHook python3
-    python3Packages.pip python3Packages.pybind11 python3Packages.sphinx
-    python3Packages.breathe python3Packages.sphinx-rtd-theme jq
+    cmake
+    pkg-config
+    git
+    perl
+    unzip
+    wget
+    gcc
+    autoPatchelfHook
+    python3
+    python3Packages.pip
+    python3Packages.pybind11
+    python3Packages.sphinx
+    python3Packages.breathe
+    python3Packages.sphinx-rtd-theme
+    jq
   ];
 
   buildInputs = with pkgs; [
-    boost libdrm libuuid libyaml ncurses ocl-icd opencl-headers openssl
-    rapidjson gtest json-glib systemd curl libjpeg libpng libtiff
-    elfutils gnuplot graphviz cppcheck strace lm_sensors dmidecode
-    yaml-cpp valgrind systemtap-unwrapped
+    boost
+    libdrm
+    libuuid
+    libyaml
+    ncurses
+    ocl-icd
+    opencl-headers
+    openssl
+    rapidjson
+    gtest
+    json-glib
+    systemd
+    curl
+    libjpeg
+    libpng
+    libtiff
+    elfutils
+    gnuplot
+    graphviz
+    cppcheck
+    strace
+    lm_sensors
+    dmidecode
+    yaml-cpp
+    valgrind
+    systemtap-unwrapped
   ];
 
   postPatch = ''
-    # Create fake os-release for build scripts and CMake
-    echo 'ID="nixos"' > os-release
-    echo 'VERSION_ID="25.11"' >> os-release
-    grep -rl '/etc/os-release' . | xargs -r sed -i "s|/etc/os-release|$PWD/os-release|g" || true
+        # Create fake os-release for build scripts and CMake
+        echo 'ID="nixos"' > os-release
+        echo 'VERSION_ID="25.11"' >> os-release
+        grep -rl '/etc/os-release' . | xargs -r sed -i "s|/etc/os-release|$PWD/os-release|g" || true
 
-    # Disable dynamic dependencies check which fails if not statically compiled
-    for f in \
-      xrt/src/runtime_src/core/common/aiebu/src/cpp/utils/asm/CMakeLists.txt \
-      xrt/src/runtime_src/core/common/aiebu/src/cpp/utils/dump/CMakeLists.txt \
-      xrt/src/runtime_src/core/common/aiebu/src/cpp/utils/transform/CMakeLists.txt; do
-      [ -f "$f" ] && substituteInPlace "$f" \
-        --replace-fail "if (NOT AIEBU_UPSTREAM)" "if (FALSE)" || true
-    done
+        # Disable dynamic dependencies check which fails if not statically compiled
+        for f in \
+          xrt/src/runtime_src/core/common/aiebu/src/cpp/utils/asm/CMakeLists.txt \
+          xrt/src/runtime_src/core/common/aiebu/src/cpp/utils/dump/CMakeLists.txt \
+          xrt/src/runtime_src/core/common/aiebu/src/cpp/utils/transform/CMakeLists.txt; do
+          [ -f "$f" ] && substituteInPlace "$f" \
+            --replace-fail "if (NOT AIEBU_UPSTREAM)" "if (FALSE)" || true
+        done
 
-    # Patch CMake pkg.cmake to add a nixos → TGZ branch.
-    # The arch elseif (which we previously piggybacked on) was removed in tag 2.21.75;
-    # the file now only has debian/fedora branches, so inject a nixos branch before the else.
-    substituteInPlace CMake/pkg.cmake \
-      --replace-fail \
-        'else("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "debian")
-  message(WARNING "Unknown Linux package flavor: ''${XDNA_CPACK_LINUX_PKG_FLAVOR}")
-endif("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "debian")' \
-        'elseif("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "nixos")
-  set(CPACK_GENERATOR "TGZ")
-  set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
-else("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "debian")
-  message(WARNING "Unknown Linux package flavor: ''${XDNA_CPACK_LINUX_PKG_FLAVOR}")
-endif("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "debian")'
+        # Patch CMake pkg.cmake to add a nixos → TGZ branch.
+        # The arch elseif (which we previously piggybacked on) was removed in tag 2.21.75;
+        # the file now only has debian/fedora branches, so inject a nixos branch before the else.
+        substituteInPlace CMake/pkg.cmake \
+          --replace-fail \
+            'else("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "debian")
+      message(WARNING "Unknown Linux package flavor: ''${XDNA_CPACK_LINUX_PKG_FLAVOR}")
+    endif("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "debian")' \
+            'elseif("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "nixos")
+      set(CPACK_GENERATOR "TGZ")
+      set(CPACK_ARCHIVE_COMPONENT_INSTALL ON)
+    else("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "debian")
+      message(WARNING "Unknown Linux package flavor: ''${XDNA_CPACK_LINUX_PKG_FLAVOR}")
+    endif("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "debian")'
 
-    # Stop build.sh from downloading VTD archives since we provide them manually in configurePhase
-    substituteInPlace build/build.sh \
-      --replace-fail "wget -O" "echo 'Skipping wget -O'"
+        # Stop build.sh from downloading VTD archives since we provide them manually in configurePhase
+        substituteInPlace build/build.sh \
+          --replace-fail "wget -O" "echo 'Skipping wget -O'"
 
-    # Bypass wget in xrt/src/runtime_src/core/common/aiebu/src/python/CMakeLists.txt
-    if [ -f xrt/src/runtime_src/core/common/aiebu/src/python/CMakeLists.txt ]; then
-        substituteInPlace xrt/src/runtime_src/core/common/aiebu/src/python/CMakeLists.txt \
-          --replace-fail "COMMAND wget" "# COMMAND wget" || true
-    fi
+        # Bypass wget in xrt/src/runtime_src/core/common/aiebu/src/python/CMakeLists.txt
+        if [ -f xrt/src/runtime_src/core/common/aiebu/src/python/CMakeLists.txt ]; then
+            substituteInPlace xrt/src/runtime_src/core/common/aiebu/src/python/CMakeLists.txt \
+              --replace-fail "COMMAND wget" "# COMMAND wget" || true
+        fi
   '';
 
   configurePhase = ''
@@ -106,7 +142,7 @@ endif("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "debian")'
 
   installPhase = ''
     mkdir -p $out
-    
+
     mkdir -p tmp_extract
     tar -xzf xrt/build/Release/xrt_202610.2.21.0_25.11--base.tar.gz -C tmp_extract
     tar -xzf xrt/build/Release/xrt_202610.2.21.0_25.11--npu.tar.gz -C tmp_extract
@@ -136,28 +172,28 @@ endif("''${XDNA_CPACK_LINUX_PKG_FLAVOR}" MATCHES "debian")'
   '';
 
   postFixup = ''
-    for lib in $out/lib/*.so*; do
-      if [ -f "$lib" ] && [ ! -L "$lib" ]; then
-        echo "Fixing hardcoded paths in $lib"
-        sed -i "s|/build/[^/]*/xrt/build/install|$out|g" "$lib" || true
-      fi
-    done
+        for lib in $out/lib/*.so*; do
+          if [ -f "$lib" ] && [ ! -L "$lib" ]; then
+            echo "Fixing hardcoded paths in $lib"
+            sed -i "s|/build/[^/]*/xrt/build/install|$out|g" "$lib" || true
+          fi
+        done
 
-    # The loader binary (bin/unwrapped/loader) looks for setup.sh at
-    # dirname(argv[0])/../../setup.sh. Create a minimal one at $out/setup.sh.
-    cat > $out/setup.sh << EOF
-#!/bin/sh
-export XILINX_XRT="$out"
-export PATH="$out/bin:\$PATH"
-export LD_LIBRARY_PATH="$out/lib:\$LD_LIBRARY_PATH"
-EOF
-    chmod +x $out/setup.sh
+        # The loader binary (bin/unwrapped/loader) looks for setup.sh at
+        # dirname(argv[0])/../../setup.sh. Create a minimal one at $out/setup.sh.
+        cat > $out/setup.sh << EOF
+    #!/bin/sh
+    export XILINX_XRT="$out"
+    export PATH="$out/bin:\$PATH"
+    export LD_LIBRARY_PATH="$out/lib:\$LD_LIBRARY_PATH"
+    EOF
+        chmod +x $out/setup.sh
 
-    # When xrt-smi is invoked via a symlink in /run/current-system/sw/bin,
-    # loader receives the symlink path as argv[0] and computes the wrong
-    # setup.sh location. Resolve the real path first so loader finds $out/setup.sh.
-    substituteInPlace $out/bin/xrt-smi \
-      --replace-fail '"''${XRT_LOADER}" -exec' \
-                     '"$(readlink -f "''${XRT_LOADER}")" -exec'
+        # When xrt-smi is invoked via a symlink in /run/current-system/sw/bin,
+        # loader receives the symlink path as argv[0] and computes the wrong
+        # setup.sh location. Resolve the real path first so loader finds $out/setup.sh.
+        substituteInPlace $out/bin/xrt-smi \
+          --replace-fail '"''${XRT_LOADER}" -exec' \
+                         '"$(readlink -f "''${XRT_LOADER}")" -exec'
   '';
 }

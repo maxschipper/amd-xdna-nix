@@ -1,4 +1,9 @@
-{ stdenv, lib, kernel, src }:
+{
+  stdenv,
+  lib,
+  kernel,
+  src,
+}:
 
 stdenv.mkDerivation rec {
   pname = "amdxdna-kmod";
@@ -21,7 +26,7 @@ stdenv.mkDerivation rec {
     # Generate the compatibility header in the correct path
     export KERNEL_SRC="${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
     export KERNEL_VER="${kernel.modDirVersion}"
-    
+
     mkdir -p src/driver/amdxdna
     OUT="src/driver/amdxdna/config_kernel.h" bash src/driver/tools/configure_kernel.sh
   '';

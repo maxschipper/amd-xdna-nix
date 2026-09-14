@@ -1,10 +1,16 @@
 { self }:
-{ config, lib, pkgs, ... }: {
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
+{
   options.hardware.amdnpu.enable = lib.mkEnableOption "AMD XDNA NPU driver and XRT SHIM";
 
   config = lib.mkIf config.hardware.amdnpu.enable {
     environment.systemPackages = [ self.packages.${pkgs.system}.xdna-driver ];
-    
+
     boot.extraModulePackages = [
       (config.boot.kernelPackages.callPackage ./kmod.nix {
         src = self.packages.${pkgs.system}.xdna-driver.src;
