@@ -144,9 +144,9 @@ pkgs.stdenv.mkDerivation {
     mkdir -p $out
 
     mkdir -p tmp_extract
-    tar -xzf xrt/build/Release/xrt_202610.2.21.0_25.11--base.tar.gz -C tmp_extract
-    tar -xzf xrt/build/Release/xrt_202610.2.21.0_25.11--npu.tar.gz -C tmp_extract
-    tar -xzf build/Release/xrt_plugin.2.21.0_25.11-x86_64-amdxdna.tar.gz -C tmp_extract
+    tar -xzf xrt/build/Release/*-base.tar.gz -C tmp_extract
+    tar -xzf xrt/build/Release/*-npu.tar.gz -C tmp_extract
+    tar -xzf build/Release/xrt_plugin.*-amdxdna.tar.gz -C tmp_extract
 
     # Move the deeply nested install directory contents to the root of $out
     for dir in $(find tmp_extract -type d -name "install"); do
