@@ -127,7 +127,7 @@ pkgs.stdenv.mkDerivation {
     export HOME=$TMPDIR
     export XRT_SOURCE_DIR=$PWD/xrt
     export CFLAGS="-isystem ${pkgs.systemtap-unwrapped}/include"
-    export CXXFLAGS="-isystem ${pkgs.systemtap-unwrapped}/include"
+    export CXXFLAGS="-isystem ${pkgs.systemtap-unwrapped}/include -std=c++17"
 
     # 1. Build XRT
     cd xrt/build
